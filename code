@@ -132,7 +132,6 @@
     <img src="images/Atlas_Color.png" alt="Logo Atlas Language Academy" />
   </header>
 
-  <!-- Only one accent button for Spain -->
   <div id="accent-selector">
     <button class="flag-btn selected" data-accent="es-ES">🇪🇸</button>
   </div>
@@ -143,9 +142,9 @@
   </div>
 
   <div id="input-area">
-    <input type="text" id="user-input" aria-label="Your response" placeholder="Escribe o usa el micrófono..." />
-    <button id="mic-btn" aria-label="Activate microphone">🎤</button>
-    <button id="send-btn" aria-label="Send message">➤</button>
+    <input type="text" id="user-input" aria-label="Tu respuesta" placeholder="Escribe o usa el micrófono..." />
+    <button id="mic-btn" aria-label="Activar micrófono">🎤</button>
+    <button id="send-btn" aria-label="Enviar mensaje">➤</button>
   </div>
 
   <script>
@@ -160,7 +159,6 @@
     let selectedAccent = 'es-ES';
     let step = 0, userName = "", userAge = null, userOrigin = "", userAdj = "";
 
-    // Voice loading and selection
     function loadVoices() {
       return new Promise(resolve => {
         let voices = speechSynthesis.getVoices();
@@ -171,27 +169,21 @@
 
     async function selectVoice() {
       const voices = await loadVoices();
-      // Prefer Google natural Spanish (Spain) voice
       selectedVoice =
         voices.find(v => v.lang === "es-ES" && v.name.includes("Google español")) ||
         voices.find(v => v.lang === "es-ES") ||
         null;
 
-      if (!selectedVoice) {
-        feedback.textContent = "No hay voz natural de España disponible en tu navegador.";
-      } else {
-        feedback.textContent = "";
-      }
+      feedback.textContent = selectedVoice ? "" : "No hay voz natural de España disponible.";
       return selectedVoice;
     }
 
     async function speak(text) {
       if (!selectedVoice) await selectVoice();
       if (!selectedVoice) {
-        feedback.textContent = "No se encontró voz para la síntesis de habla.";
+        feedback.textContent = "No se encontró voz para hablar.";
         return;
       }
-      // Stop any currently speaking utterance
       if (speechSynthesis.speaking) speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.voice = selectedVoice;
@@ -221,8 +213,7 @@
       feedback.textContent = "";
 
       if (inputLower.includes("tonto") || inputLower.includes("malo")) {
-        await respond("Por favor, usa un lenguaje apropiado. 🙏");
-        return;
+        return respond("Por favor, usa un lenguaje apropiado. 🙏");
       }
 
       if (inputLower.includes("y tú")) {
@@ -243,7 +234,7 @@
           await respond("¡Genial! ¿Cuántos años tienes?");
           step++;
         } else {
-          feedback.textContent = "Por favor, responde con 'Soy de [lugar]'.";
+          feedback.textContent = "Responde con 'Soy de [lugar]'.";
         }
       } else if (step === 2) {
         const age = text.match(/\b(\d{1,3})\b/);
@@ -252,12 +243,12 @@
           await respond(`Perfecto, tienes ${userAge} años. ¿Cómo te describirías con un adjetivo?`);
           step++;
         } else {
-          feedback.textContent = "Por favor, introduce un número válido entre 1 y 120.";
+          feedback.textContent = "Introduce un número entre 1 y 120.";
         }
       } else if (step === 3) {
         userAdj = text.trim();
         if (userAdj.length < 2) {
-          feedback.textContent = "Por favor, introduce un adjetivo válido.";
+          feedback.textContent = "Introduce un adjetivo válido.";
           return;
         }
         await respond(`¡Muy bien! Entonces, eres ${userAdj}. ¿Qué te gusta hacer en tu tiempo libre?`);
@@ -266,7 +257,7 @@
         await respond(`¡Gracias por compartir, ${userName}! Encantado de conocerte. ¡Hasta luego!`);
         step++;
       } else {
-        await respond("Recarga la página para practicar de nuevo. 😊");
+        await respond("Recarga la página para practicar otra vez. 😊");
       }
     }
 
@@ -283,7 +274,6 @@
       if (e.key === 'Enter') sendBtn.click();
     });
 
-    // Only one accent selector, but keep for extensibility
     flags.forEach(btn => {
       btn.addEventListener('click', async () => {
         flags.forEach(b => b.classList.remove('selected'));
@@ -294,7 +284,6 @@
       });
     });
 
-    // Speech recognition setup
     let recognition;
     if ('webkitSpeechRecognition' in window) {
       recognition = new webkitSpeechRecognition();
@@ -308,21 +297,19 @@
       };
     } else {
       micBtn.disabled = true;
-      micBtn.title = "El reconocimiento de voz no está soportado.";
+      micBtn.title = "El reconocimiento de voz no está disponible.";
     }
 
     micBtn.addEventListener('click', () => {
       if (recognition) recognition.start();
     });
 
-    // Ensure voices are loaded and selected before starting
     window.onload = async () => {
       await selectVoice();
       await respond("¡Hola! Soy Atlas. ¿Cómo te llamas?");
       input.focus();
     };
 
-    // Also re-select voice if voices list changes (e.g. after voices load)
     if ('speechSynthesis' in window) {
       speechSynthesis.onvoiceschanged = selectVoice;
     }
